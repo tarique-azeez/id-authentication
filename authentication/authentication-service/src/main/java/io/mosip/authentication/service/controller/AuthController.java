@@ -152,6 +152,19 @@ public class AuthController {
 			Optional<PartnerDTO> partner = partnerService.getPartner(partnerId, authrequestdto.getMetadata());
 			AuthTransactionBuilder authTxnBuilder = authTransactionHelper
 					.createAndSetAuthTxnBuilderMetadataToRequest(authrequestdto, !isAuth, partner);
+
+            if (partner.isPresent()) {
+                PartnerDTO partnerDTO = partner.get();
+                mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+                        "authenticateIndividual",
+                        String.format("Partner ID: %s | Status: %s",
+                                partnerDTO.getPartnerId(),
+                                partnerDTO.getStatus()));
+            } else {
+                mosipLogger.warn(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+                        "authenticateIndividual",
+                        String.format("Partner ID: %s not found in PartnerService lookup", partnerId));
+            }
 			
 			try {
 				String idType = Objects.nonNull(authrequestdto.getIndividualIdType()) ? authrequestdto.getIndividualIdType()

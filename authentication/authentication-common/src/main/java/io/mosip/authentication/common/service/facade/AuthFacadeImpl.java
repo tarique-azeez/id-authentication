@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.spi.indauth.service.KeyBindedTokenAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -261,6 +262,20 @@ public class AuthFacadeImpl implements AuthFacade {
 
 	private String getToken(AuthRequestDTO authRequestDTO, String partnerId, String partnerApiKey, String idvid,
 			String token) throws IdAuthenticationBusinessException {
+
+        // 🔹 Add this logger block before calling getPolicyForPartner
+        Optional<PartnerDTO> partnerOpt = partnerService.getPartner(partnerId, authRequestDTO.getMetadata());
+
+        if (partnerOpt.isPresent()) {
+            PartnerDTO partnerDTO = partnerOpt.get();
+            logger.info(IdAuthCommonConstants.SESSION_ID, EnvUtil.getAppId(), AUTH_FACADE,
+                    String.format("Partner ID Check :: PartnerId=%s | Status=%s | Blocked=%s",
+                            partnerDTO.getPartnerId(),
+                            partnerDTO.getStatus()));
+        } else {
+            logger.warn(IdAuthCommonConstants.SESSION_ID, EnvUtil.getAppId(), AUTH_FACADE,
+                    String.format("Partner ID Check :: PartnerId=%s not found in PartnerService lookup", partnerId));
+        }
 		Optional<PartnerPolicyResponseDTO> policyForPartner = partnerService.getPolicyForPartner(partnerId,
 				partnerApiKey, authRequestDTO.getMetadata());
 		Optional<String> authTokenTypeOpt = policyForPartner.map(PartnerPolicyResponseDTO::getPolicy)
